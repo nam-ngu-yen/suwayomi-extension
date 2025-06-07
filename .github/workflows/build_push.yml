@@ -45,11 +45,10 @@ jobs:
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
-        if: "github.repository == 'suwayomi/tachiyomi-extension'"
         with:
           name: "individual-apks"
           path: "**/*.apk"
-          retention-days: 1
+          retention-days: 90
 
       - name: Clean up CI files
         run: rm signingkey.jks
@@ -58,7 +57,6 @@ jobs:
     name: Publish repo
     needs:
       - build_individual
-    if: "github.repository == 'suwayomi/tachiyomi-extension'"
     runs-on: ubuntu-latest
     steps:
       - name: Download APK artifacts
