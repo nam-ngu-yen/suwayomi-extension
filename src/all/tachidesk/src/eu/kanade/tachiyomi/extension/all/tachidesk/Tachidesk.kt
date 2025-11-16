@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetCategoriesQuery
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChapterIdQuery
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChaptersDataQuery
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChaptersMutation
+import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChaptersQuery
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetMangaDataQuery
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetMangaMutation
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetPagesMutation
@@ -348,36 +349,22 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
     override fun fetchPageList(chapter: SChapter): Observable<List<Page>> {
         return runCatching {
             val mangaId = chapter.url.substringBefore(' ', "").toInt()
-            val chapterSourceOrder = chapter.url.substringAfter(' ', "").toInt()
+            val chapterId = chapter.url.substringAfter(' ', "").toInt()
             apolloClient.value
-                .query(
-                    GetChapterIdQuery(mangaId, chapterSourceOrder),
+                .mutation(
+                    GetPagesMutation(chapterId),
                 )
                 .toFlow()
                 .map {
                     it.dataAssertNoErrors
-                        .chapters
-                        .nodes
-                        .single()
-                        .id
-                }
-                .flatMapLatest { chapterId ->
-                    apolloClient.value
-                        .mutation(
-                            GetPagesMutation(chapterId),
-                        )
-                        .toFlow()
-                        .map {
-                            it.dataAssertNoErrors
-                                .fetchChapterPages!!
-                                .pages
-                                .mapIndexed { index, url ->
-                                    Page(
-                                        index + 1,
-                                        "",
-                                        "$checkedBaseUrl$url",
-                                    )
-                                }
+                        .fetchChapterPages!!
+                        .pages
+                        .mapIndexed { index, url ->
+                            Page(
+                                index + 1,
+                                "",
+                                "$checkedBaseUrl$url",
+                            )
                         }
                 }
                 .asObservable()
@@ -926,7 +913,7 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
     }
 
     private fun ChapterFragment.toSChapter() = SChapter.create().also {
-        it.url = "$mangaId $sourceOrder"
+        it.url = "$mangaId $id"
         it.name = name
         it.date_upload = uploadDate
         it.scanlator = scanlator
