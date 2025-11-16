@@ -13,8 +13,8 @@ import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.api.Optional
 import com.apollographql.apollo3.network.okHttpClient
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetCategoriesQuery
+import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChaptersQuery
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChapterIdQuery
-import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetChaptersMutation
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetMangaMutation
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.GetPagesMutation
 import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.SearchMangaQuery
@@ -223,14 +223,14 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
     override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> {
         return runCatching {
             apolloClient.value
-                .mutation(
-                    GetChaptersMutation(manga.url.toInt()),
+                .query(
+                    GetChaptersQuery(manga.url.toInt()),
                 )
                 .toFlow()
                 .map { response ->
                     response.dataAssertNoErrors
-                        .fetchChapters!!
                         .chapters
+                        .nodes
                         .sortedByDescending { it.chapterFragment.sourceOrder }
                         .map {
                             it.chapterFragment.toSChapter()

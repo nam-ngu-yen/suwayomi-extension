@@ -9,9 +9,17 @@ fragment ChapterFragment on ChapterType {
     mangaId
 }
 
-mutation GetChapters($mangaId: Int!) {
+mutation FetchChapters($mangaId: Int!) {
     fetchChapters(input: {mangaId: $mangaId}) {
         chapters {
+            ...ChapterFragment
+        }
+    }
+}
+
+query GetChapters($mangaId: Int!) {
+    chapters(condition: {mangaId: $mangaId}) {
+        nodes {
             ...ChapterFragment
         }
     }
